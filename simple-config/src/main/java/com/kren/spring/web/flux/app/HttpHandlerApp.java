@@ -7,7 +7,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServer;
 
-public class Application {
+class HttpHandlerApp {
 
 	public static void main(String[] args) {
 
