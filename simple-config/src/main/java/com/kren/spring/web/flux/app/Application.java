@@ -5,6 +5,7 @@ import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import reactor.core.publisher.Mono;
+import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
 
 public class Application {
@@ -12,7 +13,6 @@ public class Application {
 	public static void main(String[] args) {
 
         HttpHandler handler = new HttpHandler() {
-
             @Override
             public Mono<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
                 return Mono.fromRunnable(() -> {
@@ -20,14 +20,16 @@ public class Application {
                 });
             }
         };
+
         ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(handler);
-        HttpServer.create()
+
+        DisposableServer server = HttpServer.create()
             .host("localhost")
             .port(8080)
             .handle(adapter)
-            .bind()
-            .block();
+            .bindNow();
 
-        System.out.println("done");
+        server.onDispose()
+            .block();
 	}
 }
