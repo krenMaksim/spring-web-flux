@@ -17,6 +17,7 @@
 	<modules>
 		<module>simple-config</module>
 		<module>simple-spring-config</module>
+		<module>simple-spring-boot-config</module>
 	</modules>
 
 	<dependencyManagement>

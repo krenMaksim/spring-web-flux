@@ -2,10 +2,8 @@ package com.kren.spring.web.flux.app.config;
 
 import com.kren.spring.web.flux.app.handler.PersonHandler;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.server.RequestPredicate;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -13,10 +11,8 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
-@EnableWebFlux
-@Configuration
-@ComponentScan("com.kren.spring.web.flux.app.handler")
-public class SpringWebFluxConfig { // in case it is needed can implement WebFluxConfigurer
+@Configuration(proxyBeanMethods = false)
+public class RoutingConfig {
 
     private static final RequestPredicate ACCEPT_JSON = accept(MediaType.APPLICATION_JSON);
 
