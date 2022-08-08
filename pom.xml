@@ -18,6 +18,7 @@
 		<module>simple-config</module>
 		<module>simple-spring-config</module>
 		<module>simple-spring-boot-config</module>
+		<module>own-publisher-subscriber</module>
 	</modules>
 
 	<dependencyManagement>
