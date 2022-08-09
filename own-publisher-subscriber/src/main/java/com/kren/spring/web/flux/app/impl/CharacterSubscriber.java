@@ -24,7 +24,7 @@ class CharacterSubscriber implements Subscriber<Character> {
     @Override
     public void onNext(Character character) {
         var capitalLetter = Character.toUpperCase(character);
-        log.info("[{}] {}", currentThread(), capitalLetter);
+        log.info("{}", capitalLetter);
         requestMoreLettersIfNeeded();
     }
 
@@ -37,16 +37,12 @@ class CharacterSubscriber implements Subscriber<Character> {
 
     @Override
     public void onError(Throwable t) {
-        log.error(String.format("[%s]", currentThread()), t);
+        log.error("", t);
     }
 
     @Override
     public void onComplete() {
-        log.info("[{}] All letters have been recieved", currentThread());
-    }
-
-    private static String currentThread() {
-        return Thread.currentThread().getName();
+        log.info("All letters have been recieved");
     }
 
 }

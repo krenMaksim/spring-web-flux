@@ -39,7 +39,7 @@ class LettersSubscriberTest {
         var publisher = Flux.just('a', 'b', 'c', 'd', 'e', 'f', 'g');
 
         publisher.log()
-            .doOnEach(signal -> log.info("[{}] {}", Thread.currentThread().getName(), signal))
+            .doOnEach(signal -> log.info("{}", signal))
             .subscribe(new CharacterSubscriber());
     }
     
