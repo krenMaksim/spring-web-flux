@@ -1,11 +1,16 @@
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.LongStream;
 
 @Slf4j
 class LettersSubscriberTest {
@@ -37,12 +42,20 @@ class LettersSubscriberTest {
     }
 
     @Test
+    @Disabled
     void convertLettersV3() {
         var publisher = Flux.just('a', 'b', 'c', 'd', 'e', 'f', 'g');
 
         publisher.log()
             .doOnEach(signal -> log.info("[{}] {}", Thread.currentThread().getName(), signal))
             .subscribe(new CharacterSubscriber());
+    }
+    
+    @Test
+    void convertLettersV4() {
+        var publisher = CharacterPublisher.just('a', 'b', 'c', 'd', 'e', 'f', 'g');
+
+        publisher.subscribe(new CharacterSubscriber());
     }
 
     @Slf4j
@@ -69,8 +82,8 @@ class LettersSubscriberTest {
 
         private void requestMoreLettersIfNeeded() {
             if (counter.incrementAndGet() == BACK_PRESSURE) {
-                subscription.request(BACK_PRESSURE);
                 counter.set(0);
+                subscription.request(BACK_PRESSURE);
             }
         }
 
@@ -86,6 +99,53 @@ class LettersSubscriberTest {
 
         private static String currentThread() {
             return Thread.currentThread().getName();
+        }
+
+    }
+
+    @Slf4j
+    private static class CharacterPublisher implements Publisher<Character> {
+
+        public static Publisher<Character> just(Character... letter) {
+            return new CharacterPublisher(new LinkedList<>(List.of(letter)));
+        }
+
+        private final Queue<Character> queue;
+
+        public CharacterPublisher(Queue<Character> letters) {
+            this.queue = letters;
+        }
+
+        @Override
+        public void subscribe(Subscriber<? super Character> s) {
+            log.info("onSubscribe");
+            s.onSubscribe(new Subscription() {
+
+                @Override
+                public void request(long n) {
+                    log.info("request {}", n);
+                    try {
+                        if (queue.size() >= n) {
+                            LongStream.rangeClosed(1, n)
+                                .forEach(i -> s.onNext(queue.poll()));
+                        } else {
+                            while (!queue.isEmpty()) {
+                                s.onNext(queue.poll());
+                            }
+                            s.onComplete();
+                        }
+
+                    } catch (Throwable t) {
+                        log.error("onError", t);
+                        s.onError(t);
+                    }
+                }
+
+                @Override
+                public void cancel() {
+                    log.info("cancel");
+                }
+            });
         }
 
     }
