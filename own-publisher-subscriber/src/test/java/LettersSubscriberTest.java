@@ -1,3 +1,4 @@
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -8,9 +9,9 @@ import reactor.core.publisher.Flux;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.LongStream;
 
 @Slf4j
 class LettersSubscriberTest {
@@ -110,42 +111,52 @@ class LettersSubscriberTest {
             return new CharacterPublisher(new LinkedList<>(List.of(letter)));
         }
 
-        private final Queue<Character> queue;
+        private final Queue<Character> letters; // should it be thread-safe?
 
         public CharacterPublisher(Queue<Character> letters) {
-            this.queue = letters;
+            this.letters = letters;
         }
 
         @Override
-        public void subscribe(Subscriber<? super Character> s) {
+        public void subscribe(Subscriber<? super Character> subscriber) {
             log.info("onSubscribe");
-            s.onSubscribe(new Subscription() {
+            subscriber.onSubscribe(new CharacterSubscription(letters, subscriber));
+        }
 
-                @Override
-                public void request(long n) {
-                    log.info("request {}", n);
-                    try {
-                        if (queue.size() >= n) {
-                            LongStream.rangeClosed(1, n)
-                                .forEach(i -> s.onNext(queue.poll()));
-                        } else {
-                            while (!queue.isEmpty()) {
-                                s.onNext(queue.poll());
-                            }
-                            s.onComplete();
-                        }
+    }
 
-                    } catch (Throwable t) {
-                        log.error("onError", t);
-                        s.onError(t);
-                    }
+    @Slf4j
+    @RequiredArgsConstructor
+    private static class CharacterSubscription implements Subscription {
+
+        private final Queue<Character> letters; // should it be thread-safe?
+        private final Subscriber<? super Character> subscriber;
+
+        @Override
+        public void request(long n) {
+            try {
+                processRequest(n);
+            } catch (Throwable t) {
+                log.error("onError", t);
+                subscriber.onError(t);
+            }
+        }
+
+        private void processRequest(long requestedElementsNumber) {
+            log.info("request {}", requestedElementsNumber);
+            for (long element = 1; element <= requestedElementsNumber; element++) {
+                var letter = letters.poll();
+                if (Objects.isNull(letter)) {
+                    subscriber.onComplete();
+                    return;
                 }
+                subscriber.onNext(letter);
+            }
+        }
 
-                @Override
-                public void cancel() {
-                    log.info("cancel");
-                }
-            });
+        @Override
+        public void cancel() {
+            log.info("cancel");
         }
 
     }
