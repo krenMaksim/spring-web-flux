@@ -1,8 +1,7 @@
 package com.kren.spring.web.flux.app.impl;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -11,8 +10,9 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
-@Slf4j
 class ApiTest {
 
     private WebClient webClient;
@@ -31,27 +31,18 @@ class ApiTest {
     }
 
     @Test
+    @SneakyThrows
     void getLetters() {
-        var responseBody = webClient.get()
+        webClient.get()
             .uri("/letters")
             .retrieve()
             .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
-            .block();
+            .flatMapIterable(Function.identity())
+            .map(str -> str.charAt(0))
+            .log()
+            .subscribe(new CharacterSubscriber());
 
-        log.info("responseBody {}", responseBody);
-    }
-
-    @Test
-    @Disabled
-    void getLettersV2() {
-        var responseBody = webClient.get()
-            .uri("/letters")
-            .retrieve()
-            .bodyToFlux(String.class)
-            .collectList()
-            .block();
-
-        log.info("responseBody {}", responseBody);
+        TimeUnit.SECONDS.sleep(1);
     }
 
 }
