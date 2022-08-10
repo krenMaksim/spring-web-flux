@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 
 @Slf4j
-class LettersSubscriberTest {
+class CharacterImplTest {
 
     // See link https://www.appsdeveloperblog.com/reactive-programming-creating-publishers-and-subscribers-in-java/
     /*
